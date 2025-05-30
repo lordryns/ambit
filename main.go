@@ -4,20 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 )
 
 var stack = make(map[string]string)
-
-type Message struct {
-	Title       string
-	Description string
-	Type        string // info, success, warning, error
-}
-
-func (m *Message) Write() {
-
-}
 
 func main() {
 	firstArg, err := getArg(1)
@@ -32,13 +21,24 @@ func main() {
 			return
 		}
 
-		var isValid = verifyFile(secondArg)
+		var isValid, errType = verifyFile(secondArg)
+		if !isValid {
+			switch errType {
+			case FileTypeError:
+				Message(ERROR, "Invalid file type!",
+					"Hint: Files must end in .abt")
 
+			case FileDoesNotExistError:
+				Message(ERROR, "Invalid file!",
+					"Hint: Are you sure this file exists?")
+
+			}
+			return
+		}
+
+		var lines = loadScript(secondArg)
+		fmt.Println(lines)
 	}
-}
-
-func loadScript(path string) {
-
 }
 
 func getArg(index int) (string, error) {
@@ -48,16 +48,4 @@ func getArg(index int) (string, error) {
 	}
 
 	return args[0], errors.New("Not enough arguments!")
-}
-
-func verifyFile(path string) bool {
-	if strings.HasSuffix(path, ".amb") {
-		_, err := os.ReadFile(path)
-		if err != nil {
-			return false
-		}
-		return true
-	}
-
-	return false
 }
