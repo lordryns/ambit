@@ -6,7 +6,12 @@ import (
 	"os"
 )
 
-var stack = make(map[string]string)
+type Token struct {
+	Token string
+	Value string
+}
+
+var stack []Token
 
 func main() {
 	firstArg, err := getArg(1)
@@ -25,11 +30,11 @@ func main() {
 		if !isValid {
 			switch errType {
 			case FileTypeError:
-				Message(ERROR, "Invalid file type!",
+				Message(ERROR, "Invalid file type! Unable to start interpreter.",
 					"Hint: Files must end in .abt")
 
 			case FileDoesNotExistError:
-				Message(ERROR, "Invalid file!",
+				Message(ERROR, "Invalid file! Unable to start interpreter.",
 					"Hint: Are you sure this file exists?")
 
 			}
@@ -37,7 +42,12 @@ func main() {
 		}
 
 		var lines = loadScript(secondArg)
-		fmt.Println(lines)
+		var tokenErrorMessage, tokenError = createTokens(lines)
+
+		if tokenError != NoError {
+			Message(ERROR, "An error occured!", tokenErrorMessage)
+			return
+		}
 	}
 }
 
